@@ -1,0 +1,117 @@
+engine:
+  mode: paper
+  log_level: INFO
+  symbols:
+    - BTCUSDT
+
+exchanges:
+  binance:
+    enabled: true
+    testnet: true
+  okx:
+    enabled: false
+  bybit:
+    enabled: false
+
+data:
+  timeframes: ["1m", "5m", "15m", "1h", "4h", "1d"]
+  orderbook_depth: 20
+  history_days: 365
+
+features:
+  enabled:
+    - rsi_14
+    - macd_12_26_9
+    - macd_line
+    - macd_signal
+    - bollinger_upper_20
+    - bollinger_lower_20
+    - bollinger_width_20
+    - atr_14
+    - adx_14
+    - ema_10
+    - ema_20
+    - ema_50
+    - sma_20
+    - sma_50
+    - sma_200
+    - stoch_k_14
+    - stoch_d_14
+    - cci_20
+    - williams_r_14
+    - roc_10
+    - mfi_14
+    - obv
+    - vwap
+    - volume_sma_20
+    - volume_ratio
+    - accumulation_dist
+    - chaikin_mf_20
+    - force_index_13
+    - historical_vol_20
+    - book_imbalance
+    - cvd
+    - spread_bps
+    - funding_rate
+    - oi_change_pct
+    - trend_strength
+    - volatility_regime
+    - mean_reversion_score
+    - regime_label
+
+models:
+  gradient_boost:
+    enabled: true
+    retrain_interval_hours: 24
+    lookback_window: 500
+    n_estimators: 300
+    max_depth: 6
+    learning_rate: 0.05
+  transformer:
+    enabled: true
+    model_path: models/tft_v1.pt
+    sequence_length: 128
+    d_model: 64
+    n_heads: 4
+    n_layers: 3
+  rl:
+    enabled: true
+    model_path: models/ppo_v1.zip
+    retrain_interval_hours: 168
+  sentiment:
+    enabled: true
+    model_name: ProsusAI/finbert
+    news_sources:
+      - cryptopanic
+      - rss
+
+strategy:
+  meta_learner:
+    min_confidence: 0.65
+    regime_filter: true
+    max_signals_per_hour: 4
+
+risk:
+  max_position_pct: 10.0
+  max_total_exposure_pct: 30.0
+  max_daily_loss_pct: 3.0
+  max_drawdown_pct: 10.0
+  max_consecutive_losses: 5
+  circuit_breaker_cooldown_seconds: 3600
+  funding_rate_cost_cap_pct: 0.1
+
+execution:
+  default_algorithm: twap
+  twap_duration_seconds: 120
+  slippage_tolerance_bps: 10
+  maker_fee_bps: 2
+  taker_fee_bps: 5
+
+database:
+  timescaledb_url: "postgresql+asyncpg://mefai:mefai@localhost:5432/mefai_engine"
+  redis_url: "redis://localhost:6379/0"
+
+monitoring:
+  telegram:
+    enabled: false
+  metrics_port: 9090
