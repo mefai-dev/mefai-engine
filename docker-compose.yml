@@ -22,9 +22,10 @@ services:
     environment:
       POSTGRES_DB: mefai_engine
       POSTGRES_USER: mefai
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-mefai_dev_2026}
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD environment variable is required}
+    # Do not expose database port externally in production
+    # ports:
+    #   - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mefai -d mefai_engine"]
       interval: 5s
@@ -33,9 +34,10 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
-    ports:
-      - "6379:6379"
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD environment variable is required}
+    # Do not expose redis port externally in production
+    # ports:
+    #   - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

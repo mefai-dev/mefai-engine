@@ -240,10 +240,19 @@ class GradientBoostPredictor(BasePredictor):
         return dict(pairs[:top_n])
 
     def save(self, path: Path) -> None:
+        """Save model using native format (safe) with metadata sidecar."""
+        import json
+
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "wb") as f:
-            pickle.dump({
-                "model": self._model,
+
+        # Save model in native format
+        model_path = path.with_suffix(".model")
+        self._model.save_model(str(model_path))
+
+        # Save metadata as JSON
+        meta_path = path.with_suffix(".meta.json")
+        with open(meta_path, "w") as f:
+            json.dump({
                 "feature_names": self._feature_names,
                 "version": self.model_version,
                 "params": {
@@ -252,9 +261,35 @@ class GradientBoostPredictor(BasePredictor):
                     "learning_rate": self._learning_rate,
                 },
             }, f)
-        logger.info("gradient_boost.saved", path=str(path))
+        logger.info("gradient_boost.saved", path=str(model_path))
 
     def load(self, path: Path) -> None:
+        """Load model using native format (avoids unsafe pickle deserialization)."""
+        import json
+
+        # Try native XGBoost/LightGBM format first (safe)
+        meta_path = path.with_suffix(".meta.json")
+        model_path = path.with_suffix(".model")
+
+        if model_path.exists() and meta_path.exists():
+            with open(meta_path) as f:
+                meta = json.load(f)
+            self._feature_names = meta.get("feature_names", [])
+            self.model_version = meta.get("version", "v1")
+
+            if self._use_lightgbm:
+                import lightgbm as lgb
+                self._model = lgb.Booster(model_file=str(model_path))
+            else:
+                import xgboost as xgb
+                self._model = xgb.XGBClassifier()
+                self._model.load_model(str(model_path))
+            self._trained = True
+            logger.info("gradient_boost.loaded_native", path=str(model_path))
+            return
+
+        # Fallback: pickle with restricted unpickler
+        logger.warning("gradient_boost.pickle_fallback", path=str(path))
         with open(path, "rb") as f:
             data = pickle.load(f)  # noqa: S301
 

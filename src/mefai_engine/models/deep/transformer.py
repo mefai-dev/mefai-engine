@@ -323,7 +323,7 @@ class TemporalTransformerPredictor(BasePredictor):
 
     def load(self, path: Path) -> None:
         import torch
-        checkpoint = torch.load(path, map_location=self._device, weights_only=False)
+        checkpoint = torch.load(path, map_location=self._device, weights_only=True)
         config = checkpoint["config"]
         self._d_model = config["d_model"]
         self._n_heads = config["n_heads"]

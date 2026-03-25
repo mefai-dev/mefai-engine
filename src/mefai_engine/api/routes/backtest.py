@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from mefai_engine.api.middleware import check_rate_limit, require_api_key
 from mefai_engine.app import get_state
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key), Depends(check_rate_limit)])
 
 
 class BacktestRequest(BaseModel):

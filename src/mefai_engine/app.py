@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
@@ -104,16 +105,20 @@ def create_app(config_path: str | None = None) -> FastAPI:
         description="Institutional-grade AI trading engine for crypto perpetual futures",
         version=__version__,
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc",
+        docs_url="/docs" if os.environ.get("MEFAI__ENGINE__MODE") != "live" else None,
+        redoc_url="/redoc" if os.environ.get("MEFAI__ENGINE__MODE") != "live" else None,
     )
 
     # CORS
+    allowed_origins = os.environ.get("MEFAI_CORS_ORIGINS", "").split(",")
+    if not allowed_origins or allowed_origins == [""]:
+        allowed_origins = ["https://mefai.io", "http://localhost:3000"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
+        allow_origins=allowed_origins,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["*"],
     )
 

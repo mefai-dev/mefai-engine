@@ -5,11 +5,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from mefai_engine.api.middleware import check_rate_limit, require_api_key
 from mefai_engine.app import get_state
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key), Depends(check_rate_limit)])
 
 
 @router.get("/candles/{symbol}")

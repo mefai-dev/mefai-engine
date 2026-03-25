@@ -120,8 +120,8 @@ class ExecutionConfig(BaseModel):
 
 
 class DatabaseConfig(BaseModel):
-    timescaledb_url: str = "postgresql+asyncpg://mefai:mefai@localhost:5432/mefai_engine"
-    redis_url: str = "redis://localhost:6379/0"
+    timescaledb_url: str = ""
+    redis_url: str = ""
     pool_size: int = 10
     pool_overflow: int = 20
 
