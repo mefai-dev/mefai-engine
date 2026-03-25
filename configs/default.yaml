@@ -108,8 +108,9 @@ execution:
   taker_fee_bps: 5
 
 database:
-  timescaledb_url: "postgresql+asyncpg://mefai:mefai@localhost:5432/mefai_engine"
-  redis_url: "redis://localhost:6379/0"
+  # Set via environment variables: MEFAI__DATABASE__TIMESCALEDB_URL and MEFAI__DATABASE__REDIS_URL
+  timescaledb_url: ""
+  redis_url: ""
 
 monitoring:
   telegram:

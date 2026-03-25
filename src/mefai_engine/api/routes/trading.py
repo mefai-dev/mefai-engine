@@ -5,13 +5,14 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from mefai_engine.api.middleware import check_rate_limit, require_api_key
 from mefai_engine.app import get_state
 from mefai_engine.constants import Direction, ExchangeID, OrderType, Side
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key), Depends(check_rate_limit)])
 
 
 class ManualOrderRequest(BaseModel):

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from mefai_engine.api.middleware import check_rate_limit, require_api_key
 from mefai_engine.app import get_state
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_key), Depends(check_rate_limit)])
 
 
 @router.get("/metrics")

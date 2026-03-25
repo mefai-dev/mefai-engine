@@ -14,7 +14,7 @@ router = APIRouter()
 @router.post("/webhook/tradingview")
 async def tradingview_webhook(
     request: Request,
-    x_signature: str | None = Header(default=None, alias="X-Signature"),
+    x_signature: str = Header(alias="X-Signature"),
 ) -> dict[str, Any]:
     """Receive TradingView alert webhook.
 
@@ -34,8 +34,8 @@ async def tradingview_webhook(
 
     body = await request.body()
 
-    # Validate signature if configured
-    if x_signature and not receiver.validate_signature(body, x_signature):
+    # Always validate signature
+    if not receiver.validate_signature(body, x_signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
 
     try:
