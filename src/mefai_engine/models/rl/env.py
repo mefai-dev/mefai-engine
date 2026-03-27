@@ -173,20 +173,62 @@ class TradingEnv:
         return np.concatenate([features, extra]).astype(np.float32)
 
     def _compute_reward(self, step_return: float) -> float:
-        """Compute reward: Sharpe-like with drawdown penalty."""
-        # Base reward: step return
-        reward = step_return * 100  # Scale up
+        """Compute enhanced risk-adjusted reward.
 
-        # Drawdown penalty
+        Components:
+        1. Sortino ratio component (penalize downside deviation only)
+        2. Funding rate cost penalty
+        3. Position holding time penalty (discourage unnecessary churn)
+        4. Transaction cost awareness
+        5. Drawdown penalty
+        """
+        reward = 0.0
+
+        # 1. Sortino-style reward: penalize downside more heavily
+        if step_return >= 0:
+            reward += step_return * 120  # amplify positive returns
+        else:
+            reward += step_return * 200  # penalize losses more heavily
+
+        # Compute rolling Sortino component if enough history
+        if len(self._returns) >= 20:
+            recent = np.array(self._returns[-20:])
+            mean_ret = np.mean(recent)
+            downside = recent[recent < 0]
+            if len(downside) > 0:
+                downside_std = np.std(downside)
+                if downside_std > 1e-10:
+                    sortino = mean_ret / downside_std
+                    reward += np.clip(sortino, -2.0, 2.0) * 5.0
+
+        # 2. Funding rate cost penalty
+        idx = self._start_idx + self._step - 1
+        if abs(self._position) > 0 and idx < len(self._funding):
+            funding_cost = abs(self._position * self._prices[idx] * self._funding[idx])
+            reward -= funding_cost / self._initial_balance * 500
+
+        # 3. Position holding time penalty (discourage excessive churn)
+        # Small penalty for changing position too frequently
+        if len(self._returns) >= 2:
+            # Approximate position change from return pattern
+            recent_abs_returns = np.abs(self._returns[-1]) if self._returns else 0.0
+            if recent_abs_returns < 1e-8 and abs(self._position) > 0.0001:
+                # Flat return with open position; mild penalty for holding in flat market
+                reward -= 0.005
+
+        # 4. Transaction cost awareness: progressive penalty
+        fee_ratio = self._total_fees / self._initial_balance
+        if fee_ratio > 0.005:
+            reward -= (fee_ratio - 0.005) * 50
+        if fee_ratio > 0.02:
+            reward -= (fee_ratio - 0.02) * 100
+
+        # 5. Drawdown penalty (exponential)
         if self._balance < self._peak_equity:
             dd = (self._peak_equity - self._balance) / self._peak_equity
-            reward -= dd * 10
+            reward -= (dd ** 1.5) * 20
 
-        # Fee awareness: penalize excessive trading
-        if self._total_fees > self._initial_balance * 0.01:
-            reward -= 0.01
-
-        return reward
+        return float(reward)
 
 
 def create_gym_env(

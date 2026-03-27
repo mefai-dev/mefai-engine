@@ -9,13 +9,17 @@ import structlog
 from mefai_engine.config import RiskConfig
 from mefai_engine.constants import Direction, RiskDecisionType
 from mefai_engine.risk.circuit_breaker import TradingCircuitBreaker
+from mefai_engine.risk.correlation import CorrelationConfig, CorrelationRiskManager
+from mefai_engine.risk.kelly import KellyConfig, KellyCriterion
 from mefai_engine.risk.limits import (
     check_daily_loss,
     check_drawdown,
     check_max_exposure,
     check_position_size,
 )
+from mefai_engine.risk.liquidity import LiquidityConfig, LiquidityFilter
 from mefai_engine.risk.pnl_tracker import PnLTracker
+from mefai_engine.risk.var import VaRCalculator, VaRConfig
 from mefai_engine.types import Balance, Position, RiskDecision, Signal
 
 logger = structlog.get_logger()
@@ -26,9 +30,25 @@ class RiskManager:
 
     Every signal must be evaluated here before execution.
     The risk manager can APPROVE, REDUCE, or REJECT any trade.
+
+    Integrates:
+    - Position size and exposure limits
+    - Daily loss and drawdown limits
+    - Circuit breaker
+    - Kelly criterion position sizing
+    - Correlation risk management
+    - Value at Risk (VaR / CVaR) limits
+    - Liquidity analysis and filtering
     """
 
-    def __init__(self, config: RiskConfig) -> None:
+    def __init__(
+        self,
+        config: RiskConfig,
+        kelly_config: KellyConfig | None = None,
+        correlation_config: CorrelationConfig | None = None,
+        var_config: VaRConfig | None = None,
+        liquidity_config: LiquidityConfig | None = None,
+    ) -> None:
         self._config = config
         self._circuit_breaker = TradingCircuitBreaker(
             max_consecutive_losses=config.max_consecutive_losses,
@@ -38,6 +58,12 @@ class RiskManager:
         self._pnl_tracker = PnLTracker()
         self._daily_loss = 0.0
         self._daily_reset_date: str = ""
+
+        # New risk subsystems
+        self._kelly = KellyCriterion(kelly_config or KellyConfig())
+        self._correlation = CorrelationRiskManager(correlation_config or CorrelationConfig())
+        self._var = VaRCalculator(var_config or VaRConfig())
+        self._liquidity = LiquidityFilter(liquidity_config or LiquidityConfig())
 
     async def evaluate(
         self,
@@ -137,14 +163,81 @@ class RiskManager:
                 checks_failed=failed,
             )
 
-        # Determine final size
-        approved_size = min(signal.suggested_size_pct, max_size, remaining)
+        # 5. Kelly criterion check
+        kelly_size = signal.suggested_size_pct
+        kelly_result = self._kelly.calculate_from_trades(
+            self._pnl_tracker.trade_history,
+            confidence=signal.confidence,
+        )
+        if kelly_result.is_valid:
+            kelly_size = min(signal.suggested_size_pct, kelly_result.capped_size_pct)
+            passed.append("kelly")
+        else:
+            # Kelly not valid (not enough trades or negative edge)
+            # Do not reject; just note it
+            passed.append("kelly_insufficient_data")
 
-        if not size_ok or not exposure_ok:
+        # 6. Correlation check
+        current_pos_map: dict[str, float] = {}
+        for p in positions:
+            pos_pct = (p.size * p.entry_price) / balance.total * 100 if balance.total > 0 else 0
+            current_pos_map[p.symbol] = pos_pct
+
+        corr_result = self._correlation.check_correlation_risk(
+            symbol=signal.symbol,
+            proposed_size_pct=signal.suggested_size_pct,
+            current_positions=current_pos_map,
+        )
+        corr_multiplier = corr_result.suggested_size_multiplier
+        if corr_result.is_acceptable:
+            passed.append("correlation")
+        else:
+            failed.append("correlation")
+
+        # 7. VaR check
+        var_result = self._var.calculate(balance.total)
+        if var_result.is_within_limit:
+            passed.append("var")
+        else:
+            failed.append("var")
+            if var_result.breach_type in ("both", "cvar"):
+                return RiskDecision(
+                    decision=RiskDecisionType.REJECTED,
+                    approved_size_pct=0.0,
+                    reason=f"VaR limit breach: VaR={var_result.var_pct:.2f}% CVaR={var_result.cvar_pct:.2f}%",
+                    checks_passed=passed,
+                    checks_failed=failed,
+                )
+
+        # 8. Liquidity check
+        liq_result = self._liquidity.check(
+            symbol=signal.symbol,
+            proposed_size_pct=signal.suggested_size_pct,
+            portfolio_value=balance.total,
+        )
+        liq_multiplier = 1.0
+        if liq_result.is_acceptable:
+            passed.append("liquidity")
+        else:
+            failed.append("liquidity")
+            liq_multiplier = liq_result.adjusted_size_pct / signal.suggested_size_pct if signal.suggested_size_pct > 0 else 0.0
+
+        # Determine final size incorporating all checks
+        approved_size = min(
+            signal.suggested_size_pct,
+            max_size,
+            remaining,
+            kelly_size,
+        )
+        approved_size *= corr_multiplier
+        approved_size *= liq_multiplier
+        approved_size = max(approved_size, 0.0)
+
+        if not size_ok or not exposure_ok or not corr_result.is_acceptable or not liq_result.is_acceptable:
             if approved_size > 0:
                 return RiskDecision(
                     decision=RiskDecisionType.REDUCED,
-                    approved_size_pct=approved_size,
+                    approved_size_pct=round(approved_size, 4),
                     reason=f"Size reduced from {signal.suggested_size_pct:.1f}% to {approved_size:.1f}%",
                     checks_passed=passed,
                     checks_failed=failed,
@@ -159,7 +252,7 @@ class RiskManager:
 
         return RiskDecision(
             decision=RiskDecisionType.APPROVED,
-            approved_size_pct=approved_size,
+            approved_size_pct=round(approved_size, 4),
             reason="All risk checks passed",
             checks_passed=passed,
         )
@@ -180,3 +273,19 @@ class RiskManager:
     @property
     def circuit_breaker(self) -> TradingCircuitBreaker:
         return self._circuit_breaker
+
+    @property
+    def kelly(self) -> KellyCriterion:
+        return self._kelly
+
+    @property
+    def correlation_manager(self) -> CorrelationRiskManager:
+        return self._correlation
+
+    @property
+    def var_calculator(self) -> VaRCalculator:
+        return self._var
+
+    @property
+    def liquidity_filter(self) -> LiquidityFilter:
+        return self._liquidity

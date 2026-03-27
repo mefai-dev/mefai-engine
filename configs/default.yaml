@@ -116,3 +116,66 @@ monitoring:
   telegram:
     enabled: false
   metrics_port: 9090
+
+hpo:
+  n_trials: 100
+  timeout_seconds: 3600
+  model_type: xgboost
+  n_folds: 5
+  train_size: 3000
+  val_size: 1000
+
+drift:
+  psi_warning_threshold: 0.1
+  psi_critical_threshold: 0.25
+  ks_alpha: 0.05
+  n_bins: 10
+  check_interval_seconds: 3600
+
+kelly:
+  fraction: 0.25
+  max_position_pct: 10.0
+  min_win_rate: 0.4
+  min_trades: 30
+  confidence_scaling: true
+
+correlation:
+  rolling_window: 60
+  btc_correlation_limit: 0.85
+  max_correlated_exposure_pct: 40.0
+  correlation_threshold: 0.7
+  dcc_alpha: 0.01
+  dcc_beta: 0.95
+
+var:
+  confidence_level: 0.99
+  holding_period_days: 1
+  monte_carlo_simulations: 10000
+  lookback_days: 252
+  max_var_pct: 5.0
+  max_cvar_pct: 8.0
+
+liquidity:
+  min_depth_usdt: 50000.0
+  max_spread_bps: 20.0
+  max_slippage_bps: 10.0
+  depth_levels: 20
+  min_volume_24h_usdt: 1000000.0
+
+tenant:
+  max_tenants: 100
+  api_key_prefix: "mefai_"
+  api_key_length: 48
+  default_plan: free
+
+billing:
+  # Set via environment: MEFAI__BILLING__STRIPE_API_KEY
+  stripe_api_key: ""
+  stripe_webhook_secret: ""
+
+audit:
+  max_memory_entries: 50000
+  log_dir: logs/audit
+  file_rotation_size_mb: 50
+  max_files: 100
+  write_to_file: true

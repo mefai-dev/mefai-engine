@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mefai-engine
+  namespace: mefai
+  labels:
+    app: mefai-engine
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app: mefai-engine
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mefai-engine-headless
+  namespace: mefai
+  labels:
+    app: mefai-engine
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  selector:
+    app: mefai-engine

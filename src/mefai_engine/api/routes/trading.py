@@ -256,7 +256,7 @@ async def get_ticker(symbol: str) -> dict[str, Any]:
                     "ask": ticker.ask,
                     "last": ticker.last,
                     "spread": round(ticker.ask - ticker.bid, 4),
-                    "spread_bps": round((ticker.ask - ticker.bid) / ticker.mid * 10000, 2) if (ticker.bid + ticker.ask) > 0 else 0,
+                    "spread_bps": round((ticker.ask - ticker.bid) / ((ticker.bid + ticker.ask) / 2) * 10000, 2) if (ticker.bid + ticker.ask) > 0 else 0,
                     "timestamp": ticker.timestamp.isoformat(),
                 }
             except Exception as e:
