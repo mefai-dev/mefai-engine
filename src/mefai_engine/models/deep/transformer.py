@@ -34,6 +34,9 @@ class TemporalTransformerPredictor(BasePredictor):
     model_id = "transformer"
     model_version = "v1"
 
+    # Supported quantile levels for quantile regression output
+    QUANTILE_LEVELS = (0.1, 0.5, 0.9)
+
     def __init__(
         self,
         d_model: int = 64,
@@ -47,7 +50,16 @@ class TemporalTransformerPredictor(BasePredictor):
         epochs: int = 50,
         batch_size: int = 64,
         horizon_seconds: int = 14400,
+        quantile_output: bool = True,
+        warmup_steps: int = 500,
     ) -> None:
+        if sequence_length < 8:
+            raise ValueError("sequence_length must be at least 8")
+        if sequence_length > 2048:
+            raise ValueError("sequence_length must not exceed 2048")
+        if d_model % n_heads != 0:
+            raise ValueError("d_model must be divisible by n_heads")
+
         self._d_model = d_model
         self._n_heads = n_heads
         self._n_layers = n_layers
@@ -59,6 +71,8 @@ class TemporalTransformerPredictor(BasePredictor):
         self._epochs = epochs
         self._batch_size = batch_size
         self._horizon_seconds = horizon_seconds
+        self._quantile_output = quantile_output
+        self._warmup_steps = warmup_steps
         self._model: Any = None
         self._device: str = "cpu"
         self._trained = False
@@ -122,7 +136,10 @@ class TemporalTransformerPredictor(BasePredictor):
                 self.magnitude_head = nn.Linear(d_model, 1)  # Price change magnitude
                 self.confidence_head = nn.Linear(d_model, 1)  # Prediction confidence
 
-            def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                # Quantile regression heads (10th / 50th / 90th percentiles)
+                self.quantile_head = nn.Linear(d_model, 3)  # 3 quantile outputs
+
+            def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
                 h = self.input_proj(x)
                 h = self.pos_enc(h)
                 h = self.encoder(h)
@@ -131,8 +148,9 @@ class TemporalTransformerPredictor(BasePredictor):
                 direction = self.direction_head(h)
                 magnitude = self.magnitude_head(h)
                 confidence = torch.sigmoid(self.confidence_head(h))
+                quantiles = self.quantile_head(h)  # (batch, 3) for 10th/50th/90th
 
-                return direction, magnitude, confidence
+                return direction, magnitude, confidence, quantiles
 
         model = PriceTransformer(
             n_features=self._n_features,
@@ -182,7 +200,18 @@ class TemporalTransformerPredictor(BasePredictor):
         train_loader = DataLoader(train_ds, batch_size=self._batch_size, shuffle=False)
 
         optimizer = torch.optim.AdamW(self._model.parameters(), lr=self._lr, weight_decay=1e-5)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self._epochs)
+
+        # Learning rate warmup + cosine annealing
+        total_steps = len(train_loader) * self._epochs
+        warmup_steps = min(self._warmup_steps, total_steps // 4)
+
+        def lr_lambda(step: int) -> float:
+            if step < warmup_steps:
+                return float(step) / max(float(warmup_steps), 1.0)
+            progress = float(step - warmup_steps) / max(float(total_steps - warmup_steps), 1.0)
+            return max(0.1, 0.5 * (1.0 + math.cos(math.pi * progress)))
+
+        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
         criterion = nn.CrossEntropyLoss()
 
         best_val_loss = float("inf")
@@ -194,19 +223,27 @@ class TemporalTransformerPredictor(BasePredictor):
             train_loss = 0.0
             for X_batch, y_batch in train_loader:
                 optimizer.zero_grad()
-                direction, magnitude, confidence = self._model(X_batch)
+                direction, magnitude, confidence, quantiles = self._model(X_batch)
                 loss = criterion(direction, y_batch)
+
+                # Add quantile loss if enabled
+                if self._quantile_output:
+                    target_returns = (y_batch.float() - 1.0) * 0.01  # rough proxy
+                    q_loss = _quantile_loss(
+                        quantiles, target_returns, self.QUANTILE_LEVELS
+                    )
+                    loss = loss + 0.1 * q_loss
+
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self._model.parameters(), 1.0)
                 optimizer.step()
+                scheduler.step()
                 train_loss += loss.item()
-
-            scheduler.step()
 
             # Validation
             self._model.eval()
             with torch.no_grad():
-                val_dir, _, _ = self._model(X_val)
+                val_dir, _, _, _ = self._model(X_val)
                 val_loss = criterion(val_dir, y_val).item()
                 val_pred = val_dir.argmax(dim=1)
                 val_acc = (val_pred == y_val).float().mean().item()
@@ -248,11 +285,12 @@ class TemporalTransformerPredictor(BasePredictor):
 
         with torch.no_grad():
             X = torch.FloatTensor(features).to(self._device)
-            direction, magnitude, confidence = self._model(X)
+            direction, magnitude, confidence, quantiles = self._model(X)
             proba = torch.softmax(direction, dim=1)[0].cpu().numpy()
             pred_class = int(proba.argmax())
             mag = float(magnitude[0, 0].cpu().item())
             conf = float(confidence[0, 0].cpu().item())
+            q_vals = quantiles[0].cpu().numpy()
 
         dir_map = {0: Direction.SHORT, 1: Direction.FLAT, 2: Direction.LONG}
 
@@ -277,7 +315,7 @@ class TemporalTransformerPredictor(BasePredictor):
         self._model.eval()
         with torch.no_grad():
             X = torch.FloatTensor(features).to(self._device)
-            direction, magnitude, confidence = self._model(X)
+            direction, magnitude, confidence, quantiles = self._model(X)
             probas = torch.softmax(direction, dim=1).cpu().numpy()
 
         dir_map = {0: Direction.SHORT, 1: Direction.FLAT, 2: Direction.LONG}
@@ -337,3 +375,30 @@ class TemporalTransformerPredictor(BasePredictor):
         self.model_version = checkpoint.get("version", "v1")
         self._trained = True
         logger.info("transformer.loaded", path=str(path))
+
+
+def _quantile_loss(
+    predictions: "torch.Tensor",
+    targets: "torch.Tensor",
+    quantiles: tuple[float, ...] = (0.1, 0.5, 0.9),
+) -> "torch.Tensor":
+    """Compute pinball (quantile) loss for multiple quantile levels.
+
+    Args:
+        predictions: (batch_size, n_quantiles) predicted quantile values
+        targets: (batch_size,) actual values
+        quantiles: tuple of quantile levels to predict
+
+    Returns:
+        Scalar loss tensor.
+    """
+    import torch
+
+    losses = []
+    targets_expanded = targets.unsqueeze(1)
+    for i, q in enumerate(quantiles):
+        pred_q = predictions[:, i:i + 1]
+        errors = targets_expanded - pred_q
+        loss_q = torch.max(q * errors, (q - 1.0) * errors)
+        losses.append(loss_q.mean())
+    return torch.stack(losses).mean()

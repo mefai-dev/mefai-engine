@@ -129,7 +129,10 @@ class MetaLearner:
         adjusted: list[Prediction] = []
 
         for pred in predictions:
-            model_key = pred.model_id.split("_")[0]  # e.g., "gradient_boost_v1" -> "gradient_boost"
+            # Use rsplit to separate version suffix from model name
+            # e.g. "gradient_boost_v1" -> "gradient_boost" (not "gradient")
+            parts = pred.model_id.rsplit("_", 1)
+            model_key = parts[0] if len(parts) > 1 and parts[1].startswith("v") else pred.model_id
             weight = weights.get(model_key, 1.0)
             adjusted_confidence = min(pred.confidence * weight, 1.0)
 

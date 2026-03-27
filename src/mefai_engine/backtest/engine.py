@@ -75,8 +75,10 @@ class VectorizedBacktest:
         position_changes = np.diff(position_sizes, prepend=0)
         has_change = np.abs(position_changes) > 0.0001
 
-        # Returns from holding position
-        price_returns = np.diff(prices, prepend=prices[0]) / np.where(prices > 0, prices, 1)
+        # Returns from holding position (divide by previous price not current)
+        prev_prices = np.roll(prices, 1)
+        prev_prices[0] = prices[0]
+        price_returns = np.diff(prices, prepend=prices[0]) / np.where(prev_prices > 0, prev_prices, 1)
 
         # PnL per bar
         gross_pnl = position_sizes * price_returns * cfg.initial_capital
@@ -84,7 +86,7 @@ class VectorizedBacktest:
         # Fees on position changes
         fee_rate = cfg.taker_fee_bps / 10000
         slippage_rate = cfg.slippage_bps / 10000
-        fees = np.abs(position_changes) * prices * (fee_rate + slippage_rate) * cfg.initial_capital / prices
+        fees = np.abs(position_changes) * (fee_rate + slippage_rate) * cfg.initial_capital
         fees = np.where(has_change, fees, 0)
 
         # Funding costs
@@ -180,6 +182,17 @@ class VectorizedBacktest:
         trade_pnl = 0.0
 
         for i in range(1, len(signals)):
+            # Direction change = close old trade BEFORE accumulating new pnl
+            if (
+                in_trade
+                and signals[i] != 0
+                and signals[i - 1] != 0
+                and signals[i] != signals[i - 1]
+            ):
+                trades.append(trade_pnl)
+                trade_pnl = pnl[i]
+                continue
+
             if signals[i] != 0 and not in_trade:
                 in_trade = True
                 trade_pnl = pnl[i]
@@ -189,11 +202,6 @@ class VectorizedBacktest:
                 trades.append(trade_pnl)
                 in_trade = False
                 trade_pnl = 0.0
-
-            # Direction change = close old + open new
-            if i > 0 and signals[i] != 0 and signals[i - 1] != 0 and signals[i] != signals[i - 1]:
-                trades.append(trade_pnl)
-                trade_pnl = pnl[i]
 
         if in_trade:
             trades.append(trade_pnl)

@@ -95,6 +95,11 @@ class PnLTracker:
     def avg_loser(self) -> float:
         return self._gross_loss / self._loss_count if self._loss_count > 0 else 0.0
 
+    @property
+    def trade_history(self) -> list[float]:
+        """Return list of all trade PnL values for Kelly calculation."""
+        return [t.pnl for t in self._trades]
+
     def to_dict(self) -> dict[str, float]:
         """Export metrics as dictionary."""
         return {

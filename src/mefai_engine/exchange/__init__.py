@@ -1,6 +1,6 @@
 """Exchange abstraction layer."""
 
-from mefai_engine.exchange.base import ExchangeProtocol
+from mefai_engine.exchange.base import BaseExchange
 from mefai_engine.exchange.factory import ExchangeFactory
 from mefai_engine.exchange.models import (
     ExchangeCredentials,
@@ -8,7 +8,7 @@ from mefai_engine.exchange.models import (
 )
 
 __all__ = [
-    "ExchangeProtocol",
+    "BaseExchange",
     "ExchangeFactory",
     "ExchangeCredentials",
     "RateLimitState",

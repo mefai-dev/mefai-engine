@@ -139,6 +139,79 @@ class MonitoringConfig(BaseModel):
     health_check_interval_seconds: int = 30
 
 
+class HPOModelConfig(BaseModel):
+    n_trials: int = 100
+    timeout_seconds: int = 3600
+    model_type: str = "xgboost"
+    n_folds: int = 5
+    train_size: int = 3000
+    val_size: int = 1000
+
+
+class DriftDetectionConfig(BaseModel):
+    psi_warning_threshold: float = 0.1
+    psi_critical_threshold: float = 0.25
+    ks_alpha: float = 0.05
+    n_bins: int = 10
+    check_interval_seconds: int = 3600
+
+
+class KellyRiskConfig(BaseModel):
+    fraction: float = 0.25
+    max_position_pct: float = 10.0
+    min_win_rate: float = 0.4
+    min_trades: int = 30
+    confidence_scaling: bool = True
+
+
+class CorrelationRiskConfig(BaseModel):
+    rolling_window: int = 60
+    btc_correlation_limit: float = 0.85
+    max_correlated_exposure_pct: float = 40.0
+    correlation_threshold: float = 0.7
+    dcc_alpha: float = 0.01
+    dcc_beta: float = 0.95
+
+
+class VaRRiskConfig(BaseModel):
+    confidence_level: float = 0.99
+    holding_period_days: int = 1
+    monte_carlo_simulations: int = 10000
+    lookback_days: int = 252
+    max_var_pct: float = 5.0
+    max_cvar_pct: float = 8.0
+
+
+class LiquidityRiskConfig(BaseModel):
+    min_depth_usdt: float = 50000.0
+    max_spread_bps: float = 20.0
+    max_slippage_bps: float = 10.0
+    depth_levels: int = 20
+    min_volume_24h_usdt: float = 1000000.0
+
+
+class TenantSystemConfig(BaseModel):
+    max_tenants: int = 100
+    api_key_prefix: str = "mefai_"
+    api_key_length: int = 48
+    default_plan: str = "free"
+
+
+class BillingConfig(BaseModel):
+    stripe_api_key: str = ""
+    stripe_webhook_secret: str = ""
+    pro_price_id: str = ""
+    enterprise_price_id: str = ""
+
+
+class AuditLogConfig(BaseModel):
+    max_memory_entries: int = 50000
+    log_dir: str = "logs/audit"
+    file_rotation_size_mb: int = 50
+    max_files: int = 100
+    write_to_file: bool = True
+
+
 class EngineConfig(BaseModel):
     mode: EngineMode = EngineMode.PAPER
     log_level: str = "INFO"
@@ -162,6 +235,15 @@ class Settings(BaseSettings):
     execution: ExecutionConfig = Field(default_factory=ExecutionConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
+    hpo: HPOModelConfig = Field(default_factory=HPOModelConfig)
+    drift: DriftDetectionConfig = Field(default_factory=DriftDetectionConfig)
+    kelly: KellyRiskConfig = Field(default_factory=KellyRiskConfig)
+    correlation: CorrelationRiskConfig = Field(default_factory=CorrelationRiskConfig)
+    var: VaRRiskConfig = Field(default_factory=VaRRiskConfig)
+    liquidity: LiquidityRiskConfig = Field(default_factory=LiquidityRiskConfig)
+    tenant: TenantSystemConfig = Field(default_factory=TenantSystemConfig)
+    billing: BillingConfig = Field(default_factory=BillingConfig)
+    audit: AuditLogConfig = Field(default_factory=AuditLogConfig)
 
 
 def load_config(config_path: str | Path | None = None) -> Settings:

@@ -83,11 +83,34 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     from mefai_engine.monitoring.reports import ReportGenerator
     _state["report_generator"] = ReportGenerator(_state["risk_manager"].pnl_tracker)
 
+    # Initialize Prometheus metrics
+    from mefai_engine.monitoring.metrics import get_metrics
+    _state["metrics"] = get_metrics()
+
+    # Initialize audit log
+    from mefai_engine.monitoring.audit_log import AuditConfig, AuditLog
+    audit_cfg = AuditConfig(
+        log_dir=getattr(config, "audit", {}).get("log_dir", "logs/audit")
+        if isinstance(getattr(config, "audit", None), dict)
+        else "logs/audit",
+    )
+    _state["audit_log"] = AuditLog(audit_cfg)
+
+    # Initialize tenant manager
+    from mefai_engine.api.tenants import TenantConfig, TenantManager
+    _state["tenant_manager"] = TenantManager(TenantConfig())
+
+    # Initialize usage tracker for billing
+    from mefai_engine.api.routes.billing import UsageTracker
+    _state["usage_tracker"] = UsageTracker()
+
     logger.info("app.started", version=__version__, mode=config.engine.mode)
 
     yield
 
     # Shutdown
+    if _state.get("audit_log"):
+        _state["audit_log"].close()
     if _state.get("exchange_factory"):
         await _state["exchange_factory"].shutdown()
     if _state.get("store"):
@@ -130,6 +153,8 @@ def create_app(config_path: str | None = None) -> FastAPI:
     from mefai_engine.api.routes.backtest import router as backtest_router
     from mefai_engine.api.routes.monitoring import router as monitoring_router
     from mefai_engine.api.routes.webhook import router as webhook_router
+    from mefai_engine.api.routes.prometheus import router as prometheus_router
+    from mefai_engine.api.routes.billing import router as billing_router
     from mefai_engine.api.websocket import router as ws_router
 
     app.include_router(system_router, prefix="/api/v1", tags=["System"])
@@ -139,6 +164,33 @@ def create_app(config_path: str | None = None) -> FastAPI:
     app.include_router(backtest_router, prefix="/api/v1", tags=["Backtest"])
     app.include_router(monitoring_router, prefix="/api/v1", tags=["Monitoring"])
     app.include_router(webhook_router, prefix="/api/v1", tags=["Webhook"])
+    app.include_router(prometheus_router, tags=["Prometheus"])
+    app.include_router(billing_router, prefix="/api/v1", tags=["Billing"])
     app.include_router(ws_router, tags=["WebSocket"])
+
+    # Tenant extraction middleware
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.requests import Request as StarletteRequest
+    from starlette.responses import Response as StarletteResponse
+
+    class TenantMiddleware(BaseHTTPMiddleware):
+        """Extract tenant from API key and attach to request state."""
+
+        async def dispatch(
+            self, request: StarletteRequest, call_next: Any
+        ) -> StarletteResponse:
+            api_key = request.headers.get("x-api-key", "")
+            if api_key:
+                from mefai_engine.api.tenants import tenant_middleware_extract
+                tenant_mgr = _state.get("tenant_manager")
+                if tenant_mgr:
+                    tenant = tenant_middleware_extract(api_key, tenant_mgr)
+                    if tenant:
+                        request.state.tenant = tenant
+                        request.state.tenant_id = tenant.tenant_id
+            response = await call_next(request)
+            return response
+
+    app.add_middleware(TenantMiddleware)
 
     return app

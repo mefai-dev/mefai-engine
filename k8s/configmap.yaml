@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mefai-engine-config
+  namespace: mefai
+  labels:
+    app: mefai-engine
+data:
+  MEFAI__ENGINE__MODE: "paper"
+  MEFAI__ENGINE__LOG_LEVEL: "INFO"
+  MEFAI__MONITORING__METRICS_PORT: "9090"
+  MEFAI__DATA__ORDERBOOK_DEPTH: "20"
+  MEFAI__DATA__HISTORY_DAYS: "365"
+  MEFAI__EXECUTION__DEFAULT_ALGORITHM: "twap"
+  MEFAI__EXECUTION__TWAP_DURATION_SECONDS: "120"
+  MEFAI__EXECUTION__SLIPPAGE_TOLERANCE_BPS: "10"
+  MEFAI__RISK__MAX_POSITION_PCT: "10.0"
+  MEFAI__RISK__MAX_TOTAL_EXPOSURE_PCT: "30.0"
+  MEFAI__RISK__MAX_DAILY_LOSS_PCT: "3.0"
+  MEFAI__RISK__MAX_DRAWDOWN_PCT: "10.0"
+  MEFAI__RISK__MAX_CONSECUTIVE_LOSSES: "5"
+  MEFAI__RISK__CIRCUIT_BREAKER_COOLDOWN_SECONDS: "3600"
+  MEFAI_CORS_ORIGINS: "https://mefai.io"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mefai-engine-config-files
+  namespace: mefai
+  labels:
+    app: mefai-engine
+data:
+  default.yaml: |
+    engine:
+      mode: paper
+      log_level: INFO
+      symbols:
+        - BTCUSDT
+    risk:
+      max_position_pct: 10.0
+      max_total_exposure_pct: 30.0
+      max_daily_loss_pct: 3.0
+      max_drawdown_pct: 10.0
+    monitoring:
+      metrics_port: 9090
