@@ -1,5 +1,10 @@
 # MEFAI Engine
 
+[![CI](https://github.com/mefai-dev/mefai-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/mefai-dev/mefai-engine/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-63%20passing-brightgreen.svg)]()
+
 Institutional grade AI trading engine for crypto perpetual futures. Built from scratch with a multi model ensemble architecture that combines gradient boosting and deep learning and reinforcement learning and NLP sentiment analysis into a unified decision making pipeline.
 
 MEFAI Engine is not a simple trading bot. It is a full stack autonomous trading system with a multi agent orchestration layer where specialized agents (analyst and risk manager and sentinel and executor) collaborate to make and execute trading decisions.
