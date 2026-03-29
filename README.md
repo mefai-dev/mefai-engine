@@ -113,7 +113,7 @@ GET  /api/v1/config              Current configuration
 ```
 GET  /api/v1/positions           All open positions
 GET  /api/v1/balance             Account balance
-GET  /api/v1/ticker/{symbol}     Real-time price
+GET  /api/v1/ticker/{symbol}     Real time price
 GET  /api/v1/orderbook/{symbol}  Order book depth
 GET  /api/v1/funding/{symbol}    Funding rate + annualized
 GET  /api/v1/signals             Tracked signals + evolution
@@ -164,7 +164,7 @@ POST /api/v1/webhook/custom        Generic signal webhook
 
 ### WebSocket
 ```
-WS   /ws/live    Real-time stream: ticker + positions + signals + PnL
+WS   /ws/live    Real time stream: ticker + positions + signals + PnL
 ```
 
 ## ML Models
