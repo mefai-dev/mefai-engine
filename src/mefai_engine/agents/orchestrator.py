@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
-
 import structlog
 
 from mefai_engine.agents.base import AgentMessage, AgentRole, BaseAgent
-from mefai_engine.constants import Direction, ExecutionAlgo, RiskDecisionType
+from mefai_engine.constants import ExecutionAlgo, RiskDecisionType
 from mefai_engine.types import MarketState, RiskDecision, Signal, TradingDecision
 
 logger = structlog.get_logger()

@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from mefai_engine.risk.pnl_tracker import PnLTracker
+from mefai_engine.constants import CircuitState
 from mefai_engine.risk.circuit_breaker import TradingCircuitBreaker
+from mefai_engine.risk.kelly import KellyConfig, KellyCriterion
 from mefai_engine.risk.limits import (
     check_daily_loss,
     check_drawdown,
     check_position_size,
 )
-from mefai_engine.risk.kelly import KellyCriterion, KellyConfig
-from mefai_engine.constants import CircuitState
+from mefai_engine.risk.pnl_tracker import PnLTracker
 
 
 class TestPnLTracker:

@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 
 from mefai_engine.config import ExchangesConfig
 from mefai_engine.constants import CircuitState, ExchangeID
+from mefai_engine.exceptions import ExchangeConnectionError
 from mefai_engine.exchange.base import BaseExchange
 from mefai_engine.exchange.binance import BinanceExchange
 from mefai_engine.exchange.models import ExchangeCredentials
-from mefai_engine.exceptions import ExchangeConnectionError
 
 logger = structlog.get_logger()
 
@@ -40,7 +40,7 @@ class CircuitBreaker:
         self.failure_count += 1
         if self.failure_count >= self.failure_threshold:
             self.state = CircuitState.OPEN
-            self._opened_at = datetime.now(tz=timezone.utc)
+            self._opened_at = datetime.now(tz=UTC)
             logger.warning(
                 "circuit_breaker.opened",
                 failures=self.failure_count,
@@ -57,7 +57,7 @@ class CircuitBreaker:
         if self.state == CircuitState.CLOSED:
             return True
         if self.state == CircuitState.OPEN and self._opened_at:
-            elapsed = (datetime.now(tz=timezone.utc) - self._opened_at).total_seconds()
+            elapsed = (datetime.now(tz=UTC) - self._opened_at).total_seconds()
             if elapsed >= self.cooldown_seconds:
                 self.state = CircuitState.HALF_OPEN
                 logger.info("circuit_breaker.half_open")

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
-from mefai_engine.config import load_config, Settings
+from mefai_engine.config import Settings, load_config
 
 
 class TestLoadConfig:

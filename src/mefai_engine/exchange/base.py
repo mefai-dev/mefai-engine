@@ -7,7 +7,6 @@ import hmac
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
-from datetime import datetime
 from typing import Any
 
 import aiohttp
@@ -18,7 +17,6 @@ from mefai_engine.exchange.models import ExchangeCredentials, RateLimitState
 from mefai_engine.types import (
     Balance,
     Candle,
-    Fill,
     FundingRate,
     OrderBook,
     OrderRequest,

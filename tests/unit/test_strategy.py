@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-import pytest
+from datetime import UTC, datetime
 
 from mefai_engine.constants import Direction, MarketRegime
-from mefai_engine.strategy.signal import predictions_to_signal
 from mefai_engine.strategy.meta_learner import MetaLearner
+from mefai_engine.strategy.signal import predictions_to_signal
 from mefai_engine.types import Prediction
 
 
@@ -25,7 +23,7 @@ def _make_prediction(
         horizon_seconds=3600,
         model_id=model_id,
         model_version="1.0",
-        timestamp=datetime.now(tz=timezone.utc),
+        timestamp=datetime.now(tz=UTC),
     )
 
 

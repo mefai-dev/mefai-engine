@@ -8,8 +8,8 @@ via the /metrics endpoint.
 from __future__ import annotations
 
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 import structlog
 

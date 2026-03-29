@@ -7,7 +7,7 @@ Uses walk-forward validation to prevent lookahead bias.
 from __future__ import annotations
 
 import pickle
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -195,7 +195,7 @@ class GradientBoostPredictor(BasePredictor):
             horizon_seconds=self._horizon_seconds,
             model_id=self.model_id,
             model_version=self.model_version,
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     def predict_batch(self, features: np.ndarray) -> list[Prediction]:

@@ -28,7 +28,7 @@ jobs:
 
       - name: Run ruff lint
         run: |
-          ruff check src/ tests/
+          ruff check src/ tests/ --select E,F,W,I --ignore E501,E741
 
       - name: Run pytest
         run: |

@@ -5,7 +5,7 @@ Generates daily/weekly performance reports with key metrics.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -26,7 +26,7 @@ class ReportGenerator:
         metrics = self._tracker.to_dict()
         return {
             "report_type": "daily",
-            "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "generated_at": datetime.now(tz=UTC).isoformat(),
             "equity": round(equity, 2),
             "total_pnl": round(metrics["total_pnl"], 2),
             "total_trades": int(metrics["total_trades"]),
@@ -46,14 +46,14 @@ class ReportGenerator:
         prefix = "+" if pnl >= 0 else ""
 
         lines = [
-            f"<b>DAILY REPORT</b>",
-            f"",
+            "<b>DAILY REPORT</b>",
+            "",
             f"Equity: <code>${report['equity']:,.2f}</code>",
             f"Total PnL: <code>{prefix}${pnl:,.2f}</code>",
             f"Trades: <code>{report['total_trades']}</code>",
             f"Win Rate: <code>{report['win_rate']}%</code>",
             f"Profit Factor: <code>{report['profit_factor']}</code>",
-            f"",
+            "",
             f"Max DD: <code>{report['max_drawdown_pct']}%</code>",
             f"Cur DD: <code>{report['current_drawdown_pct']}%</code>",
             f"Expectancy: <code>${report['expectancy']:,.2f}</code>",

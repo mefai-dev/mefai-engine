@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -21,13 +19,12 @@ def run(
     config: str = typer.Option("configs/default.yaml", "--config", "-c", help="Config file path"),
 ) -> None:
     """Start the trading engine in live mode."""
-    import asyncio
     from mefai_engine.config import load_config
     from mefai_engine.constants import EngineMode
 
     settings = load_config(config)
     settings.engine.mode = EngineMode.LIVE
-    console.print(f"[bold green]Starting MEFAI Engine (LIVE)[/bold green]")
+    console.print("[bold green]Starting MEFAI Engine (LIVE)[/bold green]")
     console.print(f"Symbols: {settings.engine.symbols}")
     console.print(f"Exchanges: {[k for k, v in settings.exchanges.__dict__.items() if hasattr(v, 'enabled') and v.enabled]}")
 
@@ -81,7 +78,7 @@ def backtest(
     end: str = typer.Option("2025-01-01", "--end"),
 ) -> None:
     """Run a backtest."""
-    console.print(f"[bold magenta]Running Backtest[/bold magenta]")
+    console.print("[bold magenta]Running Backtest[/bold magenta]")
     console.print(f"Symbol: {symbol} | Period: {start} to {end}")
 
 
@@ -115,7 +112,7 @@ def validate_config(
     try:
         from mefai_engine.config import load_config
         settings = load_config(config)
-        console.print(f"[green]Configuration valid[/green]")
+        console.print("[green]Configuration valid[/green]")
         console.print(f"Mode: {settings.engine.mode}")
         console.print(f"Symbols: {settings.engine.symbols}")
     except Exception as e:

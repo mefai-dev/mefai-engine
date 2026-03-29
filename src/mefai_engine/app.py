@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any
 
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from mefai_engine import __version__
-from mefai_engine.config import Settings, load_config
+from mefai_engine.config import load_config
 
 logger = structlog.get_logger()
 
@@ -146,15 +147,15 @@ def create_app(config_path: str | None = None) -> FastAPI:
     )
 
     # Register routes
-    from mefai_engine.api.routes.system import router as system_router
-    from mefai_engine.api.routes.trading import router as trading_router
+    from mefai_engine.api.routes.backtest import router as backtest_router
+    from mefai_engine.api.routes.billing import router as billing_router
     from mefai_engine.api.routes.data import router as data_router
     from mefai_engine.api.routes.models import router as models_router
-    from mefai_engine.api.routes.backtest import router as backtest_router
     from mefai_engine.api.routes.monitoring import router as monitoring_router
-    from mefai_engine.api.routes.webhook import router as webhook_router
     from mefai_engine.api.routes.prometheus import router as prometheus_router
-    from mefai_engine.api.routes.billing import router as billing_router
+    from mefai_engine.api.routes.system import router as system_router
+    from mefai_engine.api.routes.trading import router as trading_router
+    from mefai_engine.api.routes.webhook import router as webhook_router
     from mefai_engine.api.websocket import router as ws_router
 
     app.include_router(system_router, prefix="/api/v1", tags=["System"])

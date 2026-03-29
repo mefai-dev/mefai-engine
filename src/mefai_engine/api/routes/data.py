@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -78,8 +77,9 @@ async def get_features(
     if not factory:
         raise HTTPException(status_code=503, detail="Exchange not connected")
 
-    from mefai_engine.constants import ExchangeID
     import numpy as np
+
+    from mefai_engine.constants import ExchangeID
 
     for eid in ExchangeID:
         exchange = factory.get(eid)

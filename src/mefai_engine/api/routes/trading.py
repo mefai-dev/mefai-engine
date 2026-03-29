@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,7 +9,7 @@ from pydantic import BaseModel
 
 from mefai_engine.api.middleware import check_rate_limit, require_api_key
 from mefai_engine.app import get_state
-from mefai_engine.constants import Direction, ExchangeID, OrderType, Side
+from mefai_engine.constants import ExchangeID, OrderType, Side
 
 router = APIRouter(dependencies=[Depends(require_api_key), Depends(check_rate_limit)])
 
@@ -280,8 +279,8 @@ async def get_orderbook(symbol: str, depth: int = 20) -> dict[str, Any]:
                 ob = await exchange.get_orderbook(symbol.upper(), depth)
                 return {
                     "symbol": ob.symbol,
-                    "bids": [{"price": l.price, "qty": l.quantity} for l in ob.bids[:depth]],
-                    "asks": [{"price": l.price, "qty": l.quantity} for l in ob.asks[:depth]],
+                    "bids": [{"price": lvl.price, "qty": lvl.quantity} for lvl in ob.bids[:depth]],
+                    "asks": [{"price": lvl.price, "qty": lvl.quantity} for lvl in ob.asks[:depth]],
                     "spread": round(ob.spread, 4),
                     "mid_price": round(ob.mid_price, 4),
                     "timestamp": ob.timestamp.isoformat(),

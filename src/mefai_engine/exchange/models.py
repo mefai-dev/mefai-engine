@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 @dataclass(slots=True)
@@ -21,11 +21,11 @@ class RateLimitState:
     category: str
     max_per_second: int
     tokens: float
-    last_refill: datetime = field(default_factory=datetime.utcnow)
+    last_refill: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
 
     def consume(self, cost: int = 1) -> bool:
         """Try to consume tokens. Returns True if allowed."""
-        now = datetime.utcnow()
+        now = datetime.now(tz=UTC)
         elapsed = (now - self.last_refill).total_seconds()
         self.tokens = min(
             self.max_per_second,

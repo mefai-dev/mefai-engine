@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -38,12 +39,14 @@ async def run_backtest(req: BacktestRequest) -> dict[str, Any]:
     if not factory:
         raise HTTPException(status_code=503, detail="Exchange not connected")
 
+    from datetime import datetime
+
     import numpy as np
-    from datetime import datetime, timezone
+
+    from mefai_engine.backtest.engine import BacktestConfig, VectorizedBacktest
+    from mefai_engine.backtest.stats import format_report
     from mefai_engine.constants import ExchangeID
     from mefai_engine.features.pipeline import FeaturePipeline
-    from mefai_engine.backtest.engine import VectorizedBacktest, BacktestConfig
-    from mefai_engine.backtest.stats import format_report
 
     # Fetch historical data
     for eid in ExchangeID:
@@ -55,8 +58,8 @@ async def run_backtest(req: BacktestRequest) -> dict[str, Any]:
             from mefai_engine.data.collector import DataCollector
             collector = DataCollector(exchange)
 
-            start_dt = datetime.fromisoformat(req.start_date).replace(tzinfo=timezone.utc)
-            end_dt = datetime.fromisoformat(req.end_date).replace(tzinfo=timezone.utc)
+            start_dt = datetime.fromisoformat(req.start_date).replace(tzinfo=UTC)
+            end_dt = datetime.fromisoformat(req.end_date).replace(tzinfo=UTC)
 
             candles = await collector.fetch_historical(
                 symbol=req.symbol.upper(),

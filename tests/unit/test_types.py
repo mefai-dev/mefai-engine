@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -102,7 +102,7 @@ class TestCandleFrozen:
 
     def test_candle_creation(self) -> None:
         """Candle should store OHLCV data."""
-        ts = datetime.now(tz=timezone.utc)
+        ts = datetime.now(tz=UTC)
         c = Candle(
             timestamp=ts,
             open=100.0,
@@ -117,7 +117,7 @@ class TestCandleFrozen:
 
     def test_candle_is_frozen(self) -> None:
         """Candle should be immutable."""
-        ts = datetime.now(tz=timezone.utc)
+        ts = datetime.now(tz=UTC)
         c = Candle(
             timestamp=ts,
             open=100.0,

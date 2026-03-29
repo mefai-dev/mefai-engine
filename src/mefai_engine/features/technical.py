@@ -10,7 +10,6 @@ import numpy as np
 
 from mefai_engine.features.registry import feature
 
-
 # ═══════════════════════════════════════════════════════════════════
 #  TREND INDICATORS
 # ═══════════════════════════════════════════════════════════════════

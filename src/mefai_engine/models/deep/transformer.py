@@ -10,7 +10,7 @@ Architecture:
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -301,7 +301,7 @@ class TemporalTransformerPredictor(BasePredictor):
             horizon_seconds=self._horizon_seconds,
             model_id=self.model_id,
             model_version=self.model_version,
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     def predict_batch(self, features: np.ndarray) -> list[Prediction]:
@@ -378,10 +378,10 @@ class TemporalTransformerPredictor(BasePredictor):
 
 
 def _quantile_loss(
-    predictions: "torch.Tensor",
-    targets: "torch.Tensor",
+    predictions: torch.Tensor,
+    targets: torch.Tensor,
     quantiles: tuple[float, ...] = (0.1, 0.5, 0.9),
-) -> "torch.Tensor":
+) -> torch.Tensor:
     """Compute pinball (quantile) loss for multiple quantile levels.
 
     Args:

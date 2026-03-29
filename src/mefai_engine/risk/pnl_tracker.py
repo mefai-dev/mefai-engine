@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 
 
 @dataclass
@@ -27,7 +27,7 @@ class PnLTracker:
 
     def record(self, pnl: float) -> None:
         """Record a closed trade's P&L."""
-        self._trades.append(TradeRecord(pnl=pnl, timestamp=datetime.now(tz=timezone.utc)))
+        self._trades.append(TradeRecord(pnl=pnl, timestamp=datetime.now(tz=UTC)))
         self._total_pnl += pnl
 
         if pnl > 0:

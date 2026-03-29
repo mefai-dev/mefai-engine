@@ -6,9 +6,8 @@ tracking investment thesis evolution with new information.
 
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 
 import structlog
@@ -35,8 +34,8 @@ class TrackedSignal:
     current_confidence: float
     evolution: SignalEvolution
     updates: int = 0
-    created_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
-    last_update: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
+    last_update: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
     confidence_history: list[float] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
@@ -90,7 +89,7 @@ class SignalTracker:
     def _update(self, tracked: TrackedSignal, new_signal: Signal) -> TrackedSignal:
         """Update a tracked signal with new information."""
         tracked.updates += 1
-        tracked.last_update = datetime.now(tz=timezone.utc)
+        tracked.last_update = datetime.now(tz=UTC)
         tracked.confidence_history.append(new_signal.confidence)
         old_conf = tracked.current_confidence
         tracked.current_confidence = new_signal.confidence

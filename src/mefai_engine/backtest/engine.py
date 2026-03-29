@@ -13,8 +13,7 @@ to validate that your signal generation process is free of lookahead bias.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
 import numpy as np
 import structlog
@@ -312,8 +311,8 @@ class VectorizedBacktest:
             avg_loser_pct=avg_loser_pct,
             expectancy=round(expectancy, 2),
             recovery_factor=round(recovery, 3),
-            start_date=datetime.now(tz=timezone.utc),
-            end_date=datetime.now(tz=timezone.utc),
+            start_date=datetime.now(tz=UTC),
+            end_date=datetime.now(tz=UTC),
             equity_curve=equity.tolist(),
         )
 

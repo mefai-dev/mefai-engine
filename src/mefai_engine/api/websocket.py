@@ -141,7 +141,7 @@ async def live_stream(ws: WebSocket) -> None:
                         await ws.send_json({"type": "pong"})
                 except json.JSONDecodeError:
                     pass
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
     except WebSocketDisconnect:

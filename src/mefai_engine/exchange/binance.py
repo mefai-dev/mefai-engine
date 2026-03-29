@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlencode
 
@@ -103,7 +103,7 @@ class BinanceExchange(BaseExchange):
             ask=float(resp["askPrice"]),
             last=float(price_resp["price"]),
             volume_24h=0.0,
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     async def get_orderbook(self, symbol: str, depth: int = 20) -> OrderBook:
@@ -114,7 +114,7 @@ class BinanceExchange(BaseExchange):
             symbol=symbol,
             bids=[OrderBookLevel(float(p), float(q)) for p, q in resp["bids"]],
             asks=[OrderBookLevel(float(p), float(q)) for p, q in resp["asks"]],
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     async def get_ohlcv(
@@ -132,7 +132,7 @@ class BinanceExchange(BaseExchange):
         candles: list[Candle] = []
         for k in resp:
             candles.append(Candle(
-                timestamp=datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc),
+                timestamp=datetime.fromtimestamp(k[0] / 1000, tz=UTC),
                 open=float(k[1]),
                 high=float(k[2]),
                 low=float(k[3]),
@@ -151,9 +151,9 @@ class BinanceExchange(BaseExchange):
             symbol=symbol,
             rate=float(resp["lastFundingRate"]),
             next_funding_time=datetime.fromtimestamp(
-                resp["nextFundingTime"] / 1000, tz=timezone.utc
+                resp["nextFundingTime"] / 1000, tz=UTC
             ),
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     # ── account ─────────────────────────────────────────────────────
@@ -185,7 +185,7 @@ class BinanceExchange(BaseExchange):
                 liquidation_price=float(p["liquidationPrice"]),
                 margin=float(p["isolatedMargin"]) if p["marginType"] == "isolated" else 0.0,
                 exchange=ExchangeID.BINANCE,
-                timestamp=datetime.now(tz=timezone.utc),
+                timestamp=datetime.now(tz=UTC),
             ))
         return positions
 
@@ -256,7 +256,7 @@ class BinanceExchange(BaseExchange):
                 ask=float(data.get("a", 0)),
                 last=float(data.get("b", 0)),
                 volume_24h=0.0,
-                timestamp=datetime.now(tz=timezone.utc),
+                timestamp=datetime.now(tz=UTC),
             )
             await callback(ticker)
 
@@ -273,7 +273,7 @@ class BinanceExchange(BaseExchange):
                 symbol=symbol,
                 bids=[OrderBookLevel(float(p), float(q)) for p, q in data.get("b", [])],
                 asks=[OrderBookLevel(float(p), float(q)) for p, q in data.get("a", [])],
-                timestamp=datetime.now(tz=timezone.utc),
+                timestamp=datetime.now(tz=UTC),
             )
             await callback(ob)
 
@@ -308,7 +308,7 @@ class BinanceExchange(BaseExchange):
             filled_quantity=float(resp.get("executedQty", 0)),
             average_price=float(resp.get("avgPrice", 0)),
             fee=float(resp.get("commission", 0)),
-            timestamp=datetime.fromtimestamp(resp["updateTime"] / 1000, tz=timezone.utc),
+            timestamp=datetime.fromtimestamp(resp["updateTime"] / 1000, tz=UTC),
             exchange=ExchangeID.BINANCE,
             raw=resp,
         )
