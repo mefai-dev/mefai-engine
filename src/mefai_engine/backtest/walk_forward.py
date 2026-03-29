@@ -207,6 +207,10 @@ class WalkForwardOptimizer:
                     best_params = params
 
             # Generate signals for all three windows with best params
+            # WARNING: Train result is in-sample and will show inflated performance
+            # due to overfitting. Only use test_result for strategy evaluation.
+            # Train result is included solely for detecting overfit (large gap
+            # between train and test Sharpe indicates overfitting).
             train_signals, train_confs = signal_generator(
                 train_feat, train_prices, train_feat, train_prices, best_params
             )
@@ -271,12 +275,29 @@ class WalkForwardOptimizer:
             oos_consistency=round(consistency, 4),
         )
 
+        # Overfit detection: compare train vs test Sharpe
+        train_sharpes = [f.train_result.sharpe_ratio for f in fold_results]
+        avg_train = float(np.mean(train_sharpes))
+        avg_test = float(np.mean(test_sharpes))
+        overfit_ratio = avg_train / avg_test if avg_test > 0 else float("inf")
+
         logger.info(
             "walk_forward.complete",
             folds=result.total_folds,
             avg_sharpe=result.aggregate_sharpe,
             avg_return=f"{result.aggregate_return_pct:.2f}%",
             consistency=f"{result.oos_consistency:.1%}",
+            train_sharpe=f"{avg_train:.3f}",
+            test_sharpe=f"{avg_test:.3f}",
+            overfit_ratio=f"{overfit_ratio:.2f}",
         )
+
+        if overfit_ratio > 3.0:
+            logger.warning(
+                "walk_forward.overfit_detected",
+                msg="Train Sharpe is 3x+ higher than test Sharpe. Strategy is likely overfit.",
+                train=f"{avg_train:.3f}",
+                test=f"{avg_test:.3f}",
+            )
 
         return result
