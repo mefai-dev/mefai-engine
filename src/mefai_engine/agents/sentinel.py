@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 import structlog
 
 from mefai_engine.agents.base import AgentMessage, AgentRole, BaseAgent

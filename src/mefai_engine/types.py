@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from mefai_engine.constants import (
@@ -160,7 +160,7 @@ class Signal:
     strategy_id: str
     model_versions: dict[str, str] = field(default_factory=dict)
     features: dict[str, float] = field(default_factory=dict)
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 @dataclass(slots=True, frozen=True)
@@ -182,7 +182,7 @@ class Prediction:
     horizon_seconds: int
     model_id: str
     model_version: str
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 @dataclass(slots=True, frozen=True)

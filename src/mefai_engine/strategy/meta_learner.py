@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections import deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 
-from mefai_engine.constants import Direction, MarketRegime
+from mefai_engine.constants import MarketRegime
 from mefai_engine.strategy.signal import predictions_to_signal
 from mefai_engine.types import Prediction, Signal
 
@@ -110,7 +110,7 @@ class MetaLearner:
         )
 
         if signal is not None:
-            self._recent_signals.append(datetime.now(tz=timezone.utc))
+            self._recent_signals.append(datetime.now(tz=UTC))
             logger.info(
                 "meta_learner.signal",
                 symbol=symbol,
@@ -150,7 +150,7 @@ class MetaLearner:
 
     def _check_rate_limit(self) -> bool:
         """Check if we're within signal rate limit."""
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         cutoff = now.timestamp() - 3600
         recent = sum(1 for t in self._recent_signals if t.timestamp() > cutoff)
         return recent < self._max_signals_per_hour

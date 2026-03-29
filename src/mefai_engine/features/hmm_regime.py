@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -25,7 +25,7 @@ class RegimeState:
     regime_label: str
     probability: float
     all_probabilities: dict[str, float]
-    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 @dataclass

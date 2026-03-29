@@ -10,10 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
-import numpy as np
 import structlog
 
 logger = structlog.get_logger()
@@ -42,7 +40,7 @@ class LiquiditySnapshot:
     book_imbalance: float  # (bid_depth - ask_depth) / (bid_depth + ask_depth)
     is_liquid: bool
     recommended_size_multiplier: float
-    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 @dataclass

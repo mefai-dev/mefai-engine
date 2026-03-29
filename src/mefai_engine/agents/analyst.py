@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 import structlog
 
 from mefai_engine.agents.base import AgentMessage, AgentRole, BaseAgent
-from mefai_engine.constants import Direction, MarketRegime
+from mefai_engine.constants import Direction
 from mefai_engine.strategy.meta_learner import MetaLearner
-from mefai_engine.types import MarketState, Prediction, Signal
+from mefai_engine.types import MarketState, Signal
 
 logger = structlog.get_logger()
 

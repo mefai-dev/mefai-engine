@@ -10,12 +10,10 @@ Supports log rotation and archival for long term storage.
 from __future__ import annotations
 
 import json
-import os
-import time
 from collections import deque
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -139,7 +137,7 @@ class AuditLog:
             The created AuditEntry (immutable once returned).
         """
         entry = AuditEntry(
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
             action=action,
             actor=actor,
             symbol=symbol,
@@ -244,7 +242,7 @@ class AuditLog:
             self._file_handle.close()
 
         log_dir = Path(self._config.log_dir)
-        timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
         file_path = log_dir / f"audit_{timestamp}.jsonl"
 
         self._file_handle = open(file_path, "a", encoding="utf-8")

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from mefai_engine.backtest.engine import BacktestConfig, VectorizedBacktest
 from mefai_engine.backtest.walk_forward import WalkForwardOptimizer

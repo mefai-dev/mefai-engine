@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter
@@ -20,7 +20,7 @@ async def health_check() -> dict[str, Any]:
     return {
         "status": "healthy",
         "version": __version__,
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "timestamp": datetime.now(tz=UTC).isoformat(),
         "components": {
             "database": state.get("store") is not None,
             "cache": state.get("cache") is not None,
@@ -56,7 +56,7 @@ async def engine_status() -> dict[str, Any]:
             "version": __version__,
             "mode": config.engine.mode.value if config else "unknown",
             "symbols": config.engine.symbols if config else [],
-            "uptime": datetime.now(tz=timezone.utc).isoformat(),
+            "uptime": datetime.now(tz=UTC).isoformat(),
         },
         "exchanges": exchanges_status,
         "risk": {

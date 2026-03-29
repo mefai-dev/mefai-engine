@@ -6,7 +6,7 @@ or deploy directly.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 
@@ -144,7 +144,7 @@ class MomentumStrategy(BaseStrategy):
                 "adx": adx if adx is not None else 0,
                 "ema_cross": (ema_10 - ema_50) / ema_50 * 100 if ema_50 and ema_50 > 0 else 0,
             },
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     async def on_tick(self, symbol: str, ticker: Ticker) -> Signal | None:

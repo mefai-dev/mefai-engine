@@ -14,14 +14,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from mefai_engine.risk.kelly import KellyCriterion, KellyConfig
-from mefai_engine.risk.pnl_tracker import PnLTracker
 from mefai_engine.risk.circuit_breaker import TradingCircuitBreaker
+from mefai_engine.risk.kelly import KellyConfig, KellyCriterion
 from mefai_engine.risk.limits import (
     check_daily_loss,
     check_drawdown,
     check_position_size,
 )
+from mefai_engine.risk.pnl_tracker import PnLTracker
 
 
 def demo_kelly_criterion() -> None:
@@ -54,7 +54,7 @@ def demo_kelly_criterion() -> None:
         confidence=0.85,
         n_trades=200,
     )
-    print(f"\n  Scenario 1 - Strong edge (55% WR / 1.5:1 payoff)")
+    print("\n  Scenario 1 - Strong edge (55% WR / 1.5:1 payoff)")
     print(f"    Full Kelly:       {result.full_kelly_pct:.2f}%")
     print(f"    Fractional Kelly: {result.fractional_kelly_pct:.2f}%")
     print(f"    Capped Size:      {result.capped_size_pct:.2f}%")
@@ -69,7 +69,7 @@ def demo_kelly_criterion() -> None:
         confidence=0.70,
         n_trades=150,
     )
-    print(f"\n  Scenario 2 - Weak edge (48% WR / 1.1:1 payoff)")
+    print("\n  Scenario 2 - Weak edge (48% WR / 1.1:1 payoff)")
     print(f"    Full Kelly:       {result2.full_kelly_pct:.2f}%")
     print(f"    Fractional Kelly: {result2.fractional_kelly_pct:.2f}%")
     print(f"    Capped Size:      {result2.capped_size_pct:.2f}%")
@@ -79,7 +79,7 @@ def demo_kelly_criterion() -> None:
     rng = np.random.default_rng(42)
     trade_pnls = list(rng.choice([120.0, 80.0, -90.0, -60.0, 150.0, -100.0], size=100))
     result3 = kelly.calculate_from_trades(trade_pnls, confidence=0.80)
-    print(f"\n  Scenario 3 - From 100 trade PnL history")
+    print("\n  Scenario 3 - From 100 trade PnL history")
     print(f"    Full Kelly:       {result3.full_kelly_pct:.2f}%")
     print(f"    Capped Size:      {result3.capped_size_pct:.2f}%")
     print(f"    Valid:            {result3.is_valid}")

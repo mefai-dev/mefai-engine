@@ -10,7 +10,7 @@ Each method is documented to explain its role in the strategy lifecycle.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 
@@ -118,7 +118,7 @@ class DualEMACrossover(BaseStrategy):
             suggested_size_pct=min(confidence * 10, 10.0),
             strategy_id=self.strategy_id,
             model_versions={"ema_crossover": "1.0"},
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     async def on_tick(self, symbol: str, ticker: Ticker) -> Signal | None:
@@ -180,7 +180,7 @@ async def demo() -> None:
     for i in range(len(all_prices)):
         p = float(all_prices[i])
         candle = Candle(
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
             open=p * 0.999,
             high=p * 1.005,
             low=p * 0.995,

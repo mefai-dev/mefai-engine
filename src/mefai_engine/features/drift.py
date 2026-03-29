@@ -8,8 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
 import numpy as np
 import structlog
@@ -37,7 +36,7 @@ class FeatureDriftResult:
     ks_p_value: float
     is_drifted: bool
     drift_severity: str  # "none" or "warning" or "critical"
-    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 @dataclass
@@ -49,7 +48,7 @@ class DriftReport:
     critical_count: int
     warning_count: int
     should_retrain: bool
-    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    timestamp: datetime = dc_field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 class FeatureDriftDetector:

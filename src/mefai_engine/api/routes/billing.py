@@ -10,16 +10,13 @@ Handles subscription lifecycle and usage metering and Stripe webhooks.
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from pydantic import BaseModel
-
 import structlog
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 
 from mefai_engine.api.middleware import require_api_key
 from mefai_engine.app import get_state
@@ -228,7 +225,7 @@ class UsageTracker:
         }
 
     def _check_daily_reset(self) -> None:
-        today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(tz=UTC).strftime("%Y-%m-%d")
         if today != self._reset_date:
             self._daily_signals.clear()
             self._active_symbols.clear()

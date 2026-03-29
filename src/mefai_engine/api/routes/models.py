@@ -87,6 +87,7 @@ async def predict(req: PredictRequest) -> dict[str, Any]:
         raise HTTPException(status_code=503, detail="Exchange not connected")
 
     import numpy as np
+
     from mefai_engine.constants import ExchangeID
     from mefai_engine.features.pipeline import FeaturePipeline
 

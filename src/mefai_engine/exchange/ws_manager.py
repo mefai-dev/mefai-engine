@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Callable, Coroutine
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -47,7 +47,6 @@ class WebSocketStream:
         self._running = False
         if self._ws:
             try:
-                import websockets
                 await self._ws.close()
             except Exception:
                 pass
@@ -77,7 +76,7 @@ class WebSocketStream:
                     async for raw in ws:
                         if not self._running:
                             break
-                        self._last_message_time = datetime.now(tz=timezone.utc)
+                        self._last_message_time = datetime.now(tz=UTC)
                         try:
                             data = json.loads(raw)
                             await self._on_message(data)

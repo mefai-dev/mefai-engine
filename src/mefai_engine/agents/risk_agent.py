@@ -6,7 +6,7 @@ import structlog
 
 from mefai_engine.agents.base import AgentMessage, AgentRole, BaseAgent
 from mefai_engine.risk.manager import RiskManager
-from mefai_engine.types import Balance, MarketState, Position, RiskDecision, Signal
+from mefai_engine.types import Balance, MarketState, Signal
 
 logger = structlog.get_logger()
 

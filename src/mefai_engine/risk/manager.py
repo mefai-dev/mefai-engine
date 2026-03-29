@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 
@@ -80,7 +80,7 @@ class RiskManager:
         failed: list[str] = []
 
         # Reset daily loss tracking
-        today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(tz=UTC).strftime("%Y-%m-%d")
         if today != self._daily_reset_date:
             self._daily_loss = 0.0
             self._daily_reset_date = today

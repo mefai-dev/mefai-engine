@@ -5,7 +5,7 @@ Enters when price is at statistical extremes and likely to revert to mean.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 
@@ -119,7 +119,7 @@ class MeanReversionStrategy(BaseStrategy):
                 "bb_position": (price - (bb_lower or 0)) / ((bb_upper or 1) - (bb_lower or 0)) if bb_upper and bb_lower and bb_upper != bb_lower else 0.5,
                 "funding": funding if funding is not None else 0,
             },
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     async def on_tick(self, symbol: str, ticker: Ticker) -> Signal | None:

@@ -8,8 +8,6 @@ aggregate correlated exposure. Uses Dynamic Conditional Correlation
 from __future__ import annotations
 
 from dataclasses import dataclass
-from dataclasses import field as dc_field
-from typing import Any
 
 import numpy as np
 import structlog

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 
@@ -45,7 +45,7 @@ class TradingCircuitBreaker:
             return True
 
         if self._state == CircuitState.OPEN and self._tripped_at:
-            elapsed = (datetime.now(tz=timezone.utc) - self._tripped_at).total_seconds()
+            elapsed = (datetime.now(tz=UTC) - self._tripped_at).total_seconds()
             if elapsed >= self.cooldown_seconds:
                 self._state = CircuitState.HALF_OPEN
                 logger.info("trading_circuit_breaker.half_open", elapsed=elapsed)
@@ -73,7 +73,7 @@ class TradingCircuitBreaker:
     def trip(self, reason: str) -> None:
         """Manually trip the circuit breaker."""
         self._state = CircuitState.OPEN
-        self._tripped_at = datetime.now(tz=timezone.utc)
+        self._tripped_at = datetime.now(tz=UTC)
         self._trip_reason = reason
         logger.warning("trading_circuit_breaker.tripped", reason=reason)
 

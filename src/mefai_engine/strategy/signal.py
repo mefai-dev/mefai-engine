@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from mefai_engine.constants import Direction
 from mefai_engine.types import Prediction, Signal
@@ -91,5 +91,5 @@ def predictions_to_signal(
         suggested_size_pct=min(suggested_size, 10.0),
         strategy_id=strategy_id,
         model_versions=model_versions,
-        timestamp=datetime.now(tz=timezone.utc),
+        timestamp=datetime.now(tz=UTC),
     )

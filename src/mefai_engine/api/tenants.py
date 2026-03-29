@@ -10,7 +10,7 @@ import hashlib
 import secrets
 from dataclasses import dataclass
 from dataclasses import field as dc_field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -67,7 +67,7 @@ class Tenant:
     risk_limits: TenantRiskLimits = dc_field(default_factory=TenantRiskLimits)
     pnl: TenantPnL = dc_field(default_factory=TenantPnL)
     metadata: dict[str, Any] = dc_field(default_factory=dict)
-    created_at: datetime = dc_field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    created_at: datetime = dc_field(default_factory=lambda: datetime.now(tz=UTC))
     signals_today: int = 0
 
 
@@ -227,7 +227,7 @@ class TenantManager:
         if tenant is None:
             return
 
-        today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(tz=UTC).strftime("%Y-%m-%d")
         if tenant.pnl.daily_reset_date != today:
             tenant.pnl.daily_pnl = 0.0
             tenant.pnl.daily_reset_date = today
@@ -252,7 +252,7 @@ class TenantManager:
         if tenant is None:
             return False
 
-        today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(tz=UTC).strftime("%Y-%m-%d")
         if tenant.pnl.daily_reset_date != today:
             tenant.pnl.daily_pnl = 0.0
             tenant.pnl.daily_reset_date = today

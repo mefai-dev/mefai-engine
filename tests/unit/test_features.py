@@ -5,11 +5,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+# Import pipeline to trigger registration of all feature modules
+import mefai_engine.features.pipeline  # noqa: F401
+from mefai_engine.features.registry import list_features
 
 # ---------------------------------------------------------------------------
 # Helper: import internal functions from the technical module
 # ---------------------------------------------------------------------------
-
 from mefai_engine.features.technical import (
     _ema,
     _sma,
@@ -17,10 +19,6 @@ from mefai_engine.features.technical import (
     bollinger_width_20,
     rsi_14,
 )
-from mefai_engine.features.registry import list_features
-
-# Import pipeline to trigger registration of all feature modules
-import mefai_engine.features.pipeline  # noqa: F401
 
 
 class TestSMA:
