@@ -134,3 +134,22 @@ class ExchangeFactory:
             await instance.disconnect()
         self._instances.clear()
         self._breakers.clear()
+
+
+MAX_RETRIES = 3
+RETRY_DELAY = 1.5
+
+def with_retry(func):
+    """Decorator to retry exchange API calls on transient failures."""
+    import functools
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        for attempt in range(MAX_RETRIES):
+            try:
+                return func(*args, **kwargs)
+            except (ConnectionError, TimeoutError) as e:
+                if attempt == MAX_RETRIES - 1:
+                    raise
+                import time
+                time.sleep(RETRY_DELAY * (attempt + 1))
+    return wrapper
