@@ -259,3 +259,9 @@ def load_config(config_path: str | Path | None = None) -> Settings:
             yaml_data = yaml.safe_load(f) or {}
 
     return Settings(**yaml_data)
+
+
+def validate_timeframe(timeframe: str) -> bool:
+    """Validate that a timeframe string is supported."""
+    valid = {"1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"}
+    return timeframe in valid
