@@ -3,7 +3,7 @@
 [![CI](https://github.com/mefai-dev/mefai-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/mefai-dev/mefai-engine/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-63%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-6%20suites-brightgreen.svg)]()
 
 Institutional grade AI trading engine for crypto perpetual futures. Built from scratch with a multi model ensemble architecture that combines gradient boosting and deep learning and reinforcement learning and NLP sentiment analysis into a unified decision making pipeline.
 
