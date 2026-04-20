@@ -3,10 +3,10 @@
 ## Important Upgrade Notice · 2026-04-21
 
 Pre-`158167d` versions of this repository (before 2026-03-25) shipped a
-`docker-compose.yml` that contained a fallback PostgreSQL password
-(`${DB_PASSWORD:-REDACTED_PASSWORD}`), left the `5432:5432` host port mapping
-open, and ran Redis without authentication. That default credential is
-considered **compromised**.
+`docker-compose.yml` that contained a hard coded fallback PostgreSQL
+password, left the `5432:5432` host port mapping open, and ran Redis
+without authentication. That default credential is considered
+**compromised** and must not be reused.
 
 ### Action required for any deployment earlier than `158167d`
 
@@ -21,9 +21,9 @@ considered **compromised**.
    old password, and rebuild the database from a verified backup if any are
    found.
 
-The leak exists in the git history of earlier commits. Treat the string
-`REDACTED_PASSWORD` as a known-burned password and ensure it is not accepted
-anywhere in your infrastructure.
+The leak exists in the git history of earlier commits. Treat the
+original shipped default as a known burned credential and ensure it is
+not accepted anywhere in your infrastructure.
 
 ## Reporting a Vulnerability
 
